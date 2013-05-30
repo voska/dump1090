@@ -7,8 +7,6 @@ div#map_canvas        { height: 100%; margin-right: 420px; }
 
 div#sidebar_container { float: left; width: 410px; margin-left: -410px; height: 100%; overflow: auto; }
 
-table#optionsTabs { width: 100%; font-size: small; font-family: monospace; background-color: #ddd; border: 1px; border-color: #000000;}
-
 #tableinfo { font-size: x-small; font-family: monospace; }
 #sudo_buttons { font-size: x-small; font-family: monospace; }
 
