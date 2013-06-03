@@ -20,7 +20,7 @@ var planeObject = {
 	messages	: null,
 	seen		: null,
 
-	// Vaild...
+	// Valid...
 	vPosition	: false,
 	vTrack		: false,
 
@@ -90,7 +90,8 @@ var planeObject = {
                     "-2.858644 -0.145909,-5.208974 -0.209316,-5.222958 -0.06341,-0.01399 -0.974464," +
                     "-0.0493 -2.024551,-0.07845 L 23.247235,38.61921 18.831373,39.8906 C 4.9432155," +
                     "43.88916 4.2929558,44.057819 3.4954426,43.86823 2.7487826,43.690732 2.2007966," +
-                    "42.916622 1.9565564,41.694305 z"
+                    "42.916622 1.9565564,41.694305 z",
+                diamondData : "M 20 0 L 40 26 L 20 52 L 0 26 z"
             };
 
 			// If the squawk code is one of the international emergency codes,
@@ -110,7 +111,7 @@ var planeObject = {
 
 			return {
                 strokeWeight: (this.is_selected ? 2 : 1),
-                path:  "M 0,0 "+ baseSvg["planeData"],
+                path:  'M 0,0 ' + (this.vTrack ? baseSvg['planeData'] : baseSvg['diamondData']),
                 scale: 0.4,
                 fillColor: this.markerColor,
                 fillOpacity: 0.9,
@@ -143,6 +144,8 @@ var planeObject = {
 			this.icao	= data.hex;
 			this.messages	= data.messages;
 			this.seen	= data.seen;
+			this.vTrack = (parseInt(data.validtrack) ? true : false);
+			this.vPosition = (parseInt(data.validposition) ? true : false);
 
 			// If no packet in over 58 seconds, consider the plane reapable
 			// This way we can hold it, but not show it just in case the plane comes back
@@ -171,8 +174,6 @@ var planeObject = {
 
 			// Is the position valid?
 			if ((data.validposition == 1) && (this.reapable == false)) {
-				this.vPosition = true;
-
 				// Detech if the plane has moved
 				changeLat = false;
 				changeLon = false;
@@ -195,15 +196,7 @@ var planeObject = {
 				}
 				this.marker = this.funcUpdateMarker();
 				PlanesOnMap++;
-			} else {
-				this.vPosition = false;
 			}
-
-			// Do we have a valid track for the plane?
-			if (data.validtrack == 1)
-				this.vTrack = true;
-			else
-				this.vTrack = false;
 		},
 
 	// Update our marker on the map
