@@ -321,7 +321,11 @@ function refreshSelected() {
 	    if (SiteShow) {
             var siteLatLon  = new google.maps.LatLng(SiteLat, SiteLon);
             var planeLatLon = new google.maps.LatLng(selected.latitude, selected.longitude);
-            var dist = google.maps.geometry.spherical.computeDistanceBetween (siteLatLon, planeLatLon);
+            var dist = google.maps.geometry.spherical.computeDistanceBetween(siteLatLon, planeLatLon);
+            var bearing = google.maps.geometry.spherical.computeHeading(siteLatLon, planeLatLon);
+            if (bearing < 0) {
+                bearing += 360;
+            }
             
             if (Metric) {
                 dist /= 1000;
@@ -330,7 +334,7 @@ function refreshSelected() {
             }
             dist = (Math.round((dist)*10)/10).toFixed(1);
             html += '<tr><td colspan="' + columns + '">Distance from Site: ' + dist +
-                (Metric ? ' km' : ' NM') + '</td></tr>';
+                (Metric ? ' km' : ' NM') + ' @ ' + Math.round(bearing) + '&deg;</td></tr>';
         } // End of SiteShow
 	} else {
 	    if (SiteShow) {
