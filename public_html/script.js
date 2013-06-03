@@ -167,11 +167,14 @@ function initialize() {
 	// Add home marker if requested
 	if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
 	    var siteMarker  = new google.maps.LatLng(SiteLat, SiteLon);
-	    var markerImage = new google.maps.MarkerImage(
-	        'http://maps.google.com/mapfiles/kml/pal4/icon57.png',
-            new google.maps.Size(32, 32),   // Image size
-            new google.maps.Point(0, 0),    // Origin point of image
-            new google.maps.Point(16, 16)); // Position where marker should point 
+	    
+	    var markerImage = {
+	        url:    'http://maps.google.com/mapfiles/kml/pal4/icon57.png',
+            size:   new google.maps.Size(32, 32),   // Image size
+            origin: new google.maps.Point(0, 0),    // Origin point of image
+            anchor: new google.maps.Point(16, 16)   // Position where marker should point
+        };
+             
 	    var marker = new google.maps.Marker({
           position: siteMarker,
           map: GoogleMap,
