@@ -31,3 +31,7 @@ SiteCircles = true; // true or false (Only shown if SiteShow is true)
 // In nautical miles or km (depending settings value 'Metric')
 SiteCirclesDistances = new Array(5,10,50,100,150,200);
 
+// -- Antenna Data Collection -----------------------------
+AntennaDataCollect  = false;
+AntennaDataShow     = false;
+

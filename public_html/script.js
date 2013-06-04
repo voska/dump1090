@@ -5,7 +5,9 @@ var PlanesOnMap   = 0;
 var PlanesOnTable = 0;
 var PlanesToReap  = 0;
 var SelectedPlane = null;
-var SpecialSqawk  = false;
+var SpecialSquawk = false;
+var AntennaData     = new Object();
+var AntennaDataPath = new Array();
 
 var iSortCol=-1;
 var bSortASC=true;
@@ -188,6 +190,16 @@ function initialize() {
               drawCircle(marker, SiteCirclesDistances[i]); // in meters
             }
         }
+        
+        if (AntennaDataCollect) {
+            if (localStorage.getObject('AntennaData')) {
+                AntennaData = localStorage.getObject('AntennaData');
+            }
+        }
+        
+        if (AntennaDataShow) {
+            drawAntennaData(siteMarker);
+        }
 	}
 	
 	// These will run after page is complitely loaded
@@ -323,18 +335,19 @@ function refreshSelected() {
             var planeLatLon = new google.maps.LatLng(selected.latitude, selected.longitude);
             var dist = google.maps.geometry.spherical.computeDistanceBetween(siteLatLon, planeLatLon);
             var bearing = google.maps.geometry.spherical.computeHeading(siteLatLon, planeLatLon);
-            if (bearing < 0) {
-                bearing += 360;
-            }
+            
+            bearing = Math.round(bearing);
+            if (bearing < 0) { bearing += 360; }
             
             if (Metric) {
                 dist /= 1000;
             } else {
                 dist /= 1852;
             }
+            
             dist = (Math.round((dist)*10)/10).toFixed(1);
             html += '<tr><td colspan="' + columns + '">Distance from Site: ' + dist +
-                (Metric ? ' km' : ' NM') + ' @ ' + Math.round(bearing) + '&deg;</td></tr>';
+                (Metric ? ' km' : ' NM') + ' @ ' + bearing + '&deg;</td></tr>';
         } // End of SiteShow
 	} else {
 	    if (SiteShow) {
@@ -630,4 +643,37 @@ function drawCircle(marker, distance) {
       strokeOpacity: 0.3
     });
     circle.bindTo('center', marker, 'position');
+}
+
+function drawAntennaData(marker) {
+    if (marker) {
+        for (var i=0;i<360;i++) {
+            if (AntennaDataPath[i]) {
+                AntennaDataPath[i].setMap(null);
+                AntennaDataPath[i] = null;
+            }
+            if (typeof AntennaData[i] !== 'undefined') {
+                var metricDist = AntennaData[i] * 1.852;
+                var end = google.maps.geometry.spherical.computeOffset(marker, metricDist, i);
+                var path = new google.maps.Polyline({
+                    path: [marker, end],
+                    strokeColor: '#000000',
+                    strokeOpacity: 0.3,
+                    strokeWeight: 1,
+                    zIndex: -99998
+                });
+                path.setMap(GoogleMap);
+                AntennaDataPath[i] = path;
+            }
+        }
+    }
+}
+
+Storage.prototype.setObject = function(key, value) {
+    this.setItem(key, JSON.stringify(value));
+}
+
+Storage.prototype.getObject = function(key) {
+    var value = this.getItem(key);
+    return value && JSON.parse(value);
 }

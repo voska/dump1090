@@ -178,25 +178,50 @@ var planeObject = {
 				changeLat = false;
 				changeLon = false;
 				changeAlt = false;
-				if (oldlat != this.latitude) {
-					changeLat = true;
-				}
-				if (oldlon != this.longitude) {
-					changeLon = true;
-				}
-				if (oldalt != this.altitude) {
-					changeAlt = true;
-				}
+				
+				if (oldlat != this.latitude)  { changeLat = true; }
+				if (oldlon != this.longitude) { changeLon = true; }
+				if (oldalt != this.altitude)  { changeAlt = true; }
+				
 				// Right now we only care about lat/long, if alt is updated only, oh well
 				if ((changeLat == true) || (changeLon == true)) {
 					this.funcAddToTrack();
 					if (this.is_selected) {
 						this.line = this.funcUpdateLines();
 					}
-				}
-				this.marker = this.funcUpdateMarker();
-				PlanesOnMap++;
-			}
+					
+					if (AntennaDataCollect) {
+					    var maxDist = 750000;
+					    var siteLatLon  = new google.maps.LatLng(SiteLat, SiteLon);
+					    var endLatLon = new google.maps.LatLng(this.latitude, this.longitude);
+					    var dist = google.maps.geometry.spherical.computeDistanceBetween(siteLatLon,
+					            endLatLon);
+					    var bearing = google.maps.geometry.spherical.computeHeading(siteLatLon,
+					            endLatLon);
+            
+                        bearing = Math.round(bearing);
+                        if (bearing < 0) { bearing += 360; }
+                        
+                        if (!Metric) {
+                            dist    /= 1.852;
+                            maxDist /= 1.852;
+                        }
+                        
+                        dist = parseFloat((Math.round((dist)*10)/10).toFixed(1));
+
+                        if (!AntennaData[bearing] || typeof AntennaData[bearing] === 'undefined' ||
+                           (dist > AntennaData[bearing] && dist < maxDist)) {
+                            AntennaData[bearing] = dist;
+                            localStorage.setObject('AntennaData', AntennaData);
+                            if (AntennaDataShow) {
+                                drawAntennaData(siteLatLon);
+                            }
+                        }
+		            }
+	            }
+	            this.marker = this.funcUpdateMarker();
+	            PlanesOnMap++;
+            }
 		},
 
 	// Update our marker on the map
