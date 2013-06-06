@@ -7,7 +7,7 @@ var PlanesToReap  = 0;
 var SelectedPlane = null;
 var SpecialSquawk = false;
 var AntennaData     = new Object();
-var AntennaDataPath = new Array();
+var AntennaDataPath = null;
 
 var iSortCol=-1;
 var bSortASC=true;
@@ -647,32 +647,40 @@ function drawCircle(marker, distance) {
 
 function drawAntennaData(marker) {
     if (marker) {
+        path = new Array();
         for (var i=0;i<360;i++) {
-            if (AntennaDataPath[i]) {
-                AntennaDataPath[i].setMap(null);
-                AntennaDataPath[i] = null;
-            }
             if (typeof AntennaData[i] !== 'undefined') {
                 var metricDist = AntennaData[i] * 1.852;
-                var end = google.maps.geometry.spherical.computeOffset(marker, metricDist, i);
-                var path = new google.maps.Polyline({
-                    path: [marker, end],
-                    strokeColor: '#000000',
-                    strokeOpacity: 0.3,
-                    strokeWeight: 1,
-                    zIndex: -99998
-                });
-                path.setMap(GoogleMap);
-                AntennaDataPath[i] = path;
+                path[i] = google.maps.geometry.spherical.computeOffset(marker, metricDist, i);
+            } else {
+                path[i] = marker;
             }
         }
+        
+        if (AntennaDataPath && typeof AntennaDataPath !== 'undefined') {
+            AntennaDataPath.setMap(null);
+            AntennaDataPath = null;
+        }
+        
+        AntennaDataPath = new google.maps.Polygon({
+            paths: path,
+            fillColor: '#7f7f7f',
+            fillOpacity: 0.4,
+            strokeColor: '#7f7f7f',
+            strokeWeight: 1,
+            strokeOpacity: 0.4,
+            zIndex: -99998
+        });
+        AntennaDataPath.setMap(GoogleMap);
     }
 }
 
+/* Store objects as string to localStorage */
 Storage.prototype.setObject = function(key, value) {
     this.setItem(key, JSON.stringify(value));
 }
 
+/* Get string objets from localStorage */
 Storage.prototype.getObject = function(key) {
     var value = this.getItem(key);
     return value && JSON.parse(value);
