@@ -6,6 +6,7 @@ var PlanesOnTable = 0;
 var PlanesToReap  = 0;
 var SelectedPlane = null;
 var SpecialSquawk = false;
+var MetarICAO     = null;
 var AntennaData     = new Object();
 var AntennaDataPath = null;
 
@@ -35,7 +36,7 @@ function fetchData() {
 			}
 			
 			/* For special squawk tests
-			if (data[j].hex == '48413x') {
+			if (data[j].hex == '4780a9x') {
             	data[j].squawk = '7700';
             } //*/
             
@@ -202,10 +203,10 @@ function initialize() {
         }
 	}
 	
-	// These will run after page is complitely loaded
-	$(window).load(function() {
-        $('#dialog-modal').css('display', 'inline'); // Show hidden settings-windows content
-    });
+	// Replace METAR to lower left corner
+    $('#METAR').css('left', '5px');
+    $('#METAR').css('bottom', '25px');
+    getMetar();
 
 	// Load up our options page
 	optionsInitalize();
@@ -221,6 +222,13 @@ function initialize() {
 		reaper();
 		extendedPulse();
 	}, 1000);
+	
+	// Refresh metar only once every 5 minutes.
+	if (MetarIcaoCode && MetarIcaoCode != "") {
+        window.setInterval(function() {
+            getMetar();
+        }, 300000);
+    }
 }
 
 // This looks for planes to reap out of the master Planes variable
@@ -441,7 +449,7 @@ function refreshTableInfo() {
 			if (tableplane.squawk == 7600) {
 				specialStyle += " squawk7600";
 			}
-			// Emergancy
+			// Emergency
 			if (tableplane.squawk == 7700) {
 				specialStyle += " squawk7700";
 			}
@@ -665,13 +673,50 @@ function drawAntennaData(marker) {
         AntennaDataPath = new google.maps.Polygon({
             paths: path,
             fillColor: '#7f7f7f',
-            fillOpacity: 0.4,
+            fillOpacity: 0.3,
             strokeColor: '#7f7f7f',
             strokeWeight: 1,
-            strokeOpacity: 0.4,
+            strokeOpacity: 0.3,
             zIndex: -99998
         });
         AntennaDataPath.setMap(GoogleMap);
+    }
+}
+
+/** gets csv of requested airport ICAOs as parameter **/
+function getMetar(pMetarICAO) {
+    if (!pMetarICAO || typeof pMetarICAO === 'undefined') { // as parameter
+        if (!MetarIcaoCode || typeof MetarIcaoCode === 'undefined') { // from config.js
+            return; // No metar to show
+        } else {
+            pMetarICAO = MetarIcaoCode;
+        }
+    }
+    
+    pMetarICAO = pMetarICAO.replace(/\s/g, "");
+    url = 'http://weather.aero/dataserver_current/httpparam?dataSource=metars&' +
+            'requestType=retrieve&format=csv&hoursBeforeNow=1&fields=raw_text&' +
+            'mostRecentForEachStation=postfilter&stationString=' + pMetarICAO;
+            
+    xReader(url, function(data) {
+        if (data.status == Number(200)) {
+            csv = data.content.split("\n");
+            csv.splice(0,6);
+            html = "";
+            for(i=0;i<csv.length;i++) {
+                csv[i] = csv[i].replace(/,/g,"");
+                html += csv[i];
+                if (i < csv.length - 1) {
+                    html += "<br>";
+                }
+            }
+            document.getElementById('METAR').innerHTML = html;
+        }
+    });
+    
+    // Show METAR-content
+    if ($('#METAR').css('display') == 'none') {
+        $('#METAR').css('display', 'inline');
     }
 }
 
