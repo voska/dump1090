@@ -11,7 +11,7 @@ div#SpecialSquawkWarning { position: absolute; bottom: 25px; right: 430px; borde
     background-color: #FFFFA3; opacity: 0.75; filter:alpha(opacity=75); padding: 5px;
     display: none; text-align: center; z-index: 99000; }
 
-div#METAR { position: absolute; border: 1px solid black;
+div#METAR { position: absolute; border: 1px solid black; cursor: move;
     background-color: #FFFFD3; opacity: 0.75; filter:alpha(opacity=75); padding: 5px;
     display: none; text-align: left; z-index: 90000; }
 

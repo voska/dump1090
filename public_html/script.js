@@ -7,6 +7,7 @@ var PlanesToReap  = 0;
 var SelectedPlane = null;
 var SpecialSquawk = false;
 var MetarICAO     = null;
+var MetarReset    = true;
 var AntennaData     = new Object();
 var AntennaDataPath = null;
 
@@ -202,11 +203,6 @@ function initialize() {
             drawAntennaData(siteMarker);
         }
 	}
-	
-	// Replace METAR to lower left corner
-    $('#METAR').css('left', '5px');
-    $('#METAR').css('bottom', '25px');
-    getMetar();
 
 	// Load up our options page
 	optionsInitalize();
@@ -223,8 +219,12 @@ function initialize() {
 		extendedPulse();
 	}, 1000);
 	
-	// Refresh metar only once every 5 minutes.
+	// Refresh metar now and then only once every 5 minutes.
 	if (MetarIcaoCode && MetarIcaoCode != "") {
+	    getMetar();
+	    $("#METAR").on("drag", function(event, ui) {
+	        MetarDragged = true;
+	    });
         window.setInterval(function() {
             getMetar();
         }, 300000);
@@ -623,9 +623,13 @@ function resetMap() {
 	if (SelectedPlane) {
 	    selectPlaneByHex(SelectedPlane);
 	}
+	
+	// Set reset METAR-flag
+	MetarReset = true;
 
 	refreshSelected();
 	refreshTableInfo();
+	getMetar();
 }
 
 function drawCircle(marker, distance) {
@@ -648,6 +652,7 @@ function drawCircle(marker, distance) {
       radius: distance, // In meters
       fillOpacity: 0.0,
       strokeWeight: 1,
+      clickable: false,
       strokeOpacity: 0.3
     });
     circle.bindTo('center', marker, 'position');
@@ -677,6 +682,7 @@ function drawAntennaData(marker) {
             strokeColor: '#7f7f7f',
             strokeWeight: 1,
             strokeOpacity: 0.3,
+            clickable: false,
             zIndex: -99998
         });
         AntennaDataPath.setMap(GoogleMap);
@@ -711,13 +717,14 @@ function getMetar(pMetarICAO) {
                 }
             }
             document.getElementById('METAR').innerHTML = html;
+            if (MetarReset) {
+                $("#METAR").position({ my: "left bottom", at: "left+5 bottom-5", of: "#map_canvas" });
+                $("#METAR").draggable({ containment: "document" });
+                $('#METAR').show();
+                MetarReset = false;
+            }
         }
     });
-    
-    // Show METAR-content
-    if ($('#METAR').css('display') == 'none') {
-        $('#METAR').css('display', 'inline');
-    }
 }
 
 /* Store objects as string to localStorage */
