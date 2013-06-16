@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="style.css" />
-		<link rel="stylesheet" href="custom-theme/jquery-ui-1.10.3.custom.css" />
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/redmond/jquery-ui.css" />
 		
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=geometry"></script>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -14,9 +14,9 @@
 		<script type="text/javascript" src="options.js"></script>
 		<script type="text/javascript" src="extension.js"></script>
 		<script type="text/javascript" src="script.js"></script>
-		<script type="text/javascript" src="coolclock/excanvas.js"></script>
-		<script type="text/javascript" src="coolclock/coolclock.js"></script>
-		<script type="text/javascript" src="coolclock/moreskins.js"></script>
+		<script type="text/javascript" src="3rdparty/coolclock/excanvas.js"></script>
+		<script type="text/javascript" src="3rdparty/coolclock/coolclock.js"></script>
+		<script type="text/javascript" src="3rdparty/coolclock/moreskins.js"></script>
 	</head>
 	<body onload="initialize()">
 		<div id="dialog-modal" title="Basic modal dialog" style="display:none;">
@@ -49,28 +49,19 @@
 			<div id="sidebar_canvas">
 				<div id="timestamps" style="align: center">
 					<table width="100%"><tr>
-						<td>Local Time</td>
-						<td>
-							<canvas id="localclock" class="CoolClock:classic:40"></canvas>
+						<td align="right" style="padding-right: 8px;">
+						    <span style="color:black;">Local&nbsp;Time</span><br>
+						    <span style="color:gray;">UTC&nbsp;Time</span>
 						</td>
-						<td>UTC Time</td>
-						<td>
-							<canvas id="gmtclock" class="CoolClock:classic:40::0"></canvas>
+						<td style="padding-right: 80px;">
+							<canvas id="localclock" class="CoolClock:classicUTC:40"></canvas>
 						</td>
+						<td align="right"><div id="sudo_buttons">
+							<button id="resetMap" onclick="resetMap();">Reset&nbsp;Map</button><br>
+							<button id="optionsModal" onclick="optionsModal();">Settings</button>
+						</div></td>
 					</tr></table>
 				</div>
-				<div id="sudo_buttons">
-					<table width="100%"><tr>
-						<td width="150" style="text-align: center;" class="pointer">
-						    [ <span onclick="resetMap();">Reset Map</span> ]
-						</td>
-						<td>&nbsp;</td>
-						<td width="150" style="text-align: center;" id="setings_button" class="pointer">
-						    [ <span onclick="optionsModal();">Settings</span> ]
-						</td>
-					</tr></table>
-				</div>
-
 				<div id="plane_detail"></div>
 				<div id="options"></div>
 				<div id="planes_table"></div>

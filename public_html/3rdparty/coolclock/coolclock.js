@@ -239,14 +239,17 @@ CoolClock.prototype = {
 		}
 
 		// Draw the hands
-		if (skin.hourHand)
-			this.radialLineAtAngle(this.tickAngle(((hour%12)*5 + min/12.0)),skin.hourHand);
-
-		if (skin.minuteHand)
-			this.radialLineAtAngle(this.tickAngle((min + sec/60.0)),skin.minuteHand);
-
 		if (this.showSecondHand && skin.secondHand)
 			this.radialLineAtAngle(this.tickAngle(sec),skin.secondHand);
+	    
+	    if (skin.minuteHand)
+			this.radialLineAtAngle(this.tickAngle((min + sec/60.0)),skin.minuteHand);
+    			
+		if (skin.hourHand)
+			this.radialLineAtAngle(this.tickAngle(((hour%12)*5 + min/12.0)),skin.hourHand);
+	
+	    if (skin.hourHandUTC)
+			this.radialLineAtAngle(this.tickAngle((((new Date().getUTCHours())%12)*5 + min/12.0)),skin.hourHandUTC);
 
 		// Second hand decoration doesn't render right in IE so lets turn it off
 		if (!CoolClock.config.isIE && this.showSecondHand && skin.secondDecoration)

@@ -203,7 +203,22 @@ function initialize() {
             drawAntennaData(siteMarker);
         }
 	}
-
+	
+	// Ui buttons setup
+	btnWidth = "100px";
+	$("#resetMap").button({icons: {primary: "ui-icon-arrowrefresh-1-w"}});
+	$("#resetMap").width(btnWidth);
+	$("#resetMap").css("margin-bottom", "3px");
+	$("#resetMap").button().focus(function() {
+      $(this).button("widget").removeClass("ui-state-focus");
+    });
+	
+	$("#optionsModal").button({icons: {primary: "ui-icon-gear"}});
+	$("#optionsModal").width(btnWidth);
+    $("#optionsModal").button().focus(function() {
+      $(this).button("widget").removeClass("ui-state-focus");
+    });
+	
 	// Load up our options page
 	optionsInitalize();
 
@@ -720,6 +735,7 @@ function getMetar(pMetarICAO) {
             if (MetarReset) {
                 $("#METAR").position({ my: "left bottom", at: "left+5 bottom-5", of: "#map_canvas" });
                 $("#METAR").draggable({ containment: "document" });
+                $("#METAR").addClass('ui-state-highlight');
                 $('#METAR').show();
                 MetarReset = false;
             }
