@@ -38,4 +38,5 @@ MetarIcaoCode = "EGLL,EGLC";
 // -- Antenna Data Collection -----------------------------
 AntennaDataCollect  = false;
 AntennaDataShow     = false;
+AntennaDataOpacity  = 0.3;
 

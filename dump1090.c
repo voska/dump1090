@@ -3549,8 +3549,10 @@ char *aircraftsToJson(int *len) {
 
 #define MODES_CONTENT_TYPE_HTML "text/html;charset=utf-8"
 #define MODES_CONTENT_TYPE_CSS  "text/css;charset=utf-8"
+#define MODES_CONTENT_TYPE_TXT  "text/plain;charset=utf-8"
 #define MODES_CONTENT_TYPE_JSON "application/json;charset=utf-8"
 #define MODES_CONTENT_TYPE_JS   "application/javascript;charset=utf-8"
+#define MODES_CONTENT_TYPE_PNG  "image/png"
 
 /* Get an HTTP request header and write the response to the client.
  * Again here we assume that the socket buffer is enough without doing
@@ -3635,6 +3637,10 @@ int handleHTTPRequest(struct client *c, char *p) {
             snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_JSON);
         } else if (strstr(ext, ".css")) {
             snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_CSS);
+        } else if (strstr(ext, ".txt")) {
+            snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_TXT);
+        } else if (strstr(ext, ".png")) {
+            snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_PNG);
         } else if (strstr(ext, ".js")) {
             snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_JS);
         }

@@ -8,7 +8,7 @@ var SelectedPlane = null;
 var SpecialSquawk = false;
 var MetarICAO     = null;
 var MetarReset    = true;
-var AntennaData     = new Object();
+var AntennaData     = {};
 var AntennaDataPath = null;
 
 var iSortCol=-1;
@@ -200,7 +200,25 @@ function initialize() {
         }
         
         if (AntennaDataShow) {
-            drawAntennaData(siteMarker);
+            // Get AntennaData from localStorage
+            if (localStorage['AntennaData']) {AntennaData = localStorage.getObject('AntennaData');}
+            
+            // Load data from file
+            length = Object.size(AntennaData);
+            if (length < 270) {
+                jQuery.ajaxSetup({async:false});
+                $.get('/antennaBaseCoverage.txt',  function(data) {
+                    if (data.indexOf('Error') == -1) { // no errors
+                        localStorage['AntennaData'] = data;
+                    }
+                });
+                jQuery.ajaxSetup({async:true});
+            }
+            
+            if (localStorage['AntennaData']) {
+                AntennaData = localStorage.getObject('AntennaData');
+                drawAntennaData(siteMarker);
+            }
         }
 	}
 	
@@ -674,34 +692,44 @@ function drawCircle(marker, distance) {
 }
 
 function drawAntennaData(marker) {
-    if (marker) {
-        path = new Array();
-        for (var i=0;i<360;i++) {
-            if (typeof AntennaData[i] !== 'undefined') {
-                var metricDist = AntennaData[i] * 1.852;
-                path[i] = google.maps.geometry.spherical.computeOffset(marker, metricDist, i);
-            } else {
-                path[i] = marker;
-            }
-        }
-        
+    if (!AntennaDataShow) {
         if (AntennaDataPath && typeof AntennaDataPath !== 'undefined') {
             AntennaDataPath.setMap(null);
             AntennaDataPath = null;
         }
-        
-        AntennaDataPath = new google.maps.Polygon({
-            paths: path,
-            fillColor: '#7f7f7f',
-            fillOpacity: 0.3,
-            strokeColor: '#7f7f7f',
-            strokeWeight: 1,
-            strokeOpacity: 0.3,
-            clickable: false,
-            zIndex: -99998
-        });
-        AntennaDataPath.setMap(GoogleMap);
+        return false;
+    }    
+    
+    if (!marker && (SiteLat && SiteLon)) {
+        marker = new google.maps.LatLng(parseFloat(SiteLat), parseFloat(SiteLon));
     }
+    
+    path = new Array();
+    for (var i=0;i<360;i++) {
+        if (typeof AntennaData[i] !== 'undefined') {
+            var metricDist = AntennaData[i] * 1.852;
+            path[i] = google.maps.geometry.spherical.computeOffset(marker, metricDist, i);
+        } else {
+            path[i] = marker;
+        }
+    }
+    
+    if (AntennaDataPath && typeof AntennaDataPath !== 'undefined') {
+        AntennaDataPath.setMap(null);
+        AntennaDataPath = null;
+    }
+    
+    AntennaDataPath = new google.maps.Polygon({
+        paths: path,
+        fillColor: '#7f7f7f',
+        fillOpacity: AntennaDataOpacity,
+        strokeColor: '#7f7f7f',
+        strokeWeight: 1,
+        strokeOpacity: AntennaDataOpacity,
+        clickable: false,
+        zIndex: -99998
+    });
+    AntennaDataPath.setMap(GoogleMap);
 }
 
 /** gets csv of requested airport ICAOs as parameter **/
@@ -753,3 +781,12 @@ Storage.prototype.getObject = function(key) {
     var value = this.getItem(key);
     return value && JSON.parse(value);
 }
+
+/* Get size of object */
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
