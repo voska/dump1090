@@ -5,6 +5,9 @@
 //
 // --------------------------------------------------------
 
+// -- JSON-feed -------------------------------------------
+CONST_JSON = '/dump1090/data.json'; // Default '/dump1090/data.json'
+
 // -- Output Settings -------------------------------------
 // Show metric values
 Metric = false; // true or false
