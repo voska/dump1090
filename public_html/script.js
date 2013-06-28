@@ -364,7 +364,14 @@ function refreshSelected() {
 	} else {
 	    html += 'n/a';
 	}
-	html += '</td><td>&nbsp;</td></tr>';
+
+	html += '</td><td>Reg: '
+	if (selected.reg && selected.reg != '') {
+	    html += selected.reg;
+	} else {
+	    html += 'n/a';
+	}
+	html += '</td></tr>';
 
 	html += '<tr><td colspan="' + columns + '" align="center">Lat/Long: ';
 	if (selected && selected.vPosition) {
@@ -488,12 +495,16 @@ function refreshTableInfo() {
 			}
 			
 			if (tableplane.vPosition == true) {
-				html += '<tr class="plane_table_row vPosition' + specialStyle + '">';
+				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row vPosition' + specialStyle + '">';
 			} else {
-				html += '<tr class="plane_table_row ' + specialStyle + '">';
+				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row ' + specialStyle + '">';
 		    }
 		    
-			html += '<td>' + tableplane.icao + '</td>';
+		    if (tableplane.reg && tableplane.reg != '')  {
+		        html += '<td>' + tableplane.reg + '</td>';
+		    } else {
+			    html += '<td>' + tableplane.icao + '</td>';
+			}
 			html += '<td>' + tableplane.flight + '</td>';
 			if (tableplane.squawk != '0000' ) {
     			html += '<td align="right">' + tableplane.squawk + '</td>';
@@ -532,17 +543,15 @@ function refreshTableInfo() {
         $('#SpecialSquawkWarning').css('display', 'none');
     }
 
-	// Click event for table
-	$('#planes_table').find('tr').click( function(){
-		var hex = $(this).find('td:first').text();
-		if (hex != "ICAO") {
-			selectPlaneByHex(hex);
-			refreshTableInfo();
-			refreshSelected();
-		}
-	});
-
 	sortTable("tableinfo");
+}
+
+function onClickPlanes_table (hex) {
+    if (hex && hex != '' && hex != "ICAO") {
+		selectPlaneByHex(hex);
+		refreshTableInfo();
+		refreshSelected();
+	}
 }
 
 // Credit goes to a co-worker that needed a similar functions for something else
