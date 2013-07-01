@@ -3500,12 +3500,13 @@ char *aircraftsToJson(int *len) {
     while(a) {
         int position = 0;
         int track = 0;
+        int altitude = 0;
+        char signalLevel[34]; // "[255,255,255,255,255,255,255,255]"
 
         if (a->modeACflags & MODEAC_MSG_FLAG) { // skip any fudged ICAO records Mode A/C
             a = a->next;
             continue;
         }
-        
         
         if (a->bFlags & MODES_ACFLAGS_LATLON_VALID) {
             position = 1;
@@ -3515,13 +3516,23 @@ char *aircraftsToJson(int *len) {
             track = 1;
         }
         
+        if (a->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) {
+            altitude = 1;
+        }
+        
+        // Latest signal level at [a->messages % 7]
+        sprintf(signalLevel, "[%d,%d,%d,%d,%d,%d,%d,%d]",
+            a->signalLevel[0], a->signalLevel[1], a->signalLevel[2], a->signalLevel[3],
+            a->signalLevel[4], a->signalLevel[5], a->signalLevel[6], a->signalLevel[7]);
+
         // No metric conversion
         l = snprintf(p,buflen,
             "{\"hex\":\"%06x\", \"squawk\":\"%04x\", \"flight\":\"%s\", \"lat\":%f, "
-            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"track\":%d, \"validtrack\":%d,"
+            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"validaltitude\":%d, "
+            "\"track\":%d, \"validtrack\":%d, \"signal\":%s, "
             "\"speed\":%d, \"messages\":%ld, \"seen\":%d},\n",
-            a->addr, a->modeA, a->flight, a->lat, a->lon, position, a->altitude, a->track, track,
-            a->speed, a->messages, (int)(now - a->seen));
+            a->addr, a->modeA, a->flight, a->lat, a->lon, position, a->altitude, altitude,
+            a->track, track, signalLevel, a->speed, a->messages, (int)(now - a->seen));
         p += l; buflen -= l;
         
         /* Resize if needed. */

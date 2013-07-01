@@ -324,7 +324,7 @@ function refreshSelected() {
 	}
 	html += '<td></tr>';
 	
-	if (selected) {
+	if (selected && selected.vAltitude) {
 	    if (Metric) {
         	html += '<tr><td>Altitude: ' + Math.round(selected.altitude / 3.2828) + ' m</td>';
         } else {
@@ -367,7 +367,8 @@ function refreshSelected() {
 
 	html += '</td><td>Reg: '
 	if (selected.reg && selected.reg != '') {
-	    html += selected.reg;
+	    html += '<a href="http://www.planespotters.net/Aviation_Photos/search.php?reg='+selected.reg +
+	        '&o=14" target="_blank">' + selected.reg + '</a>';
 	} else {
 	    html += 'n/a';
 	}
@@ -513,10 +514,18 @@ function refreshTableInfo() {
     	    }
     	    
     	    if (Metric) {
-    			html += '<td align="right">' + Math.round(tableplane.altitude / 3.2828) + '</td>';
+    	        if (tableplane.vAltitude) {
+        			html += '<td align="right">' + Math.round(tableplane.altitude / 3.2828) + '</td>';
+        	    } else {
+    	            html += '<td align="right">&nbsp;</td>';
+    	        }
     			html += '<td align="right">' + Math.round(tableplane.speed * 1.852) + '</td>';
     	    } else {
-    	        html += '<td align="right">' + tableplane.altitude + '</td>';
+    	        if (tableplane.vAltitude) {
+    	            html += '<td align="right">' + tableplane.altitude + '</td>';
+    	        } else {
+    	            html += '<td align="right">&nbsp;</td>';
+    	        }
     	        html += '<td align="right">' + tableplane.speed + '</td>';
     	    }
 			
@@ -598,6 +607,9 @@ function sortTable(szTableID,iCol) {
 	for (var i=0,iLen=oTbl.rows.length;i<iLen;i++){
 		var oRow=oTbl.rows[i];
 		vColData=bNumeric?parseFloat(oRow.cells[iSortCol].textContent||oRow.cells[iSortCol].innerText):String(oRow.cells[iSortCol].textContent||oRow.cells[iSortCol].innerText);
+		
+		// Sort empty altitude as 0
+		if (iSortCol == 3 && (!vColData || vColData.length < 2)) {vColData = 0;}
 		aStore.push([vColData,oRow]);
 	}
 

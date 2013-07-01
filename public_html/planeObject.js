@@ -147,6 +147,7 @@ var planeObject = {
 			this.seen	    = data.seen;
 			this.vTrack     = (parseInt(data.validtrack) ? true : false);
 			this.vPosition  = (parseInt(data.validposition) ? true : false);
+			this.vAltitude  = (parseInt(data.validaltitude) ? true : false);
 			if (data.reg && data.reg != '') {
 			    this.reg    = data.reg;
 			}
@@ -238,7 +239,7 @@ var planeObject = {
 					position: new google.maps.LatLng(this.latitude, this.longitude),
 					map: GoogleMap,
 					icon: this.funcGetIcon(),
-					visable: true,
+					visible: true,
 				});
 
 				// This is so we can match icao address
@@ -272,6 +273,7 @@ var planeObject = {
 					strokeWeight: 3,
 					map: GoogleMap,
 					path: this.trackline,
+					zIndex: 10
 				});
 			}
 			return this.line;
