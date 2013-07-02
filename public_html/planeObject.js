@@ -145,6 +145,7 @@ var planeObject = {
 			this.icao	    = data.hex;
 			this.messages	= data.messages;
 			this.seen	    = data.seen;
+			this.signal     = data.signal;
 			this.vTrack     = (parseInt(data.validtrack) ? true : false);
 			this.vPosition  = (parseInt(data.validposition) ? true : false);
 			this.vAltitude  = (parseInt(data.validaltitude) ? true : false);

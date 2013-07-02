@@ -464,6 +464,7 @@ function refreshTableInfo() {
 	html += '<td onclick="setASC_DESC(\'1\');sortTable(\'tableinfo\',\'1\');">Flight</td>';
 	html += '<td onclick="setASC_DESC(\'2\');sortTable(\'tableinfo\',\'2\');" ' +
 	    'align="right">Squawk</td>';
+	// There is special sorting code for altitude (3) at sortTable()-function
 	html += '<td onclick="setASC_DESC(\'3\');sortTable(\'tableinfo\',\'3\');" ' +
 	    'align="right">Altitude</td>';
 	html += '<td onclick="setASC_DESC(\'4\');sortTable(\'tableinfo\',\'4\');" ' +
@@ -471,8 +472,10 @@ function refreshTableInfo() {
 	html += '<td onclick="setASC_DESC(\'5\');sortTable(\'tableinfo\',\'5\');" ' +
 	    'align="right">Track</td>';
 	html += '<td onclick="setASC_DESC(\'6\');sortTable(\'tableinfo\',\'6\');" ' +
-	    'align="right">Msgs</td>';
+	    'align="right">Signal</td>';
 	html += '<td onclick="setASC_DESC(\'7\');sortTable(\'tableinfo\',\'7\');" ' +
+	    'align="right">Msgs</td>';
+	html += '<td onclick="setASC_DESC(\'8\');sortTable(\'tableinfo\',\'8\');" ' +
 	    'align="right">Seen</td></thead><tbody>';
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
@@ -537,6 +540,14 @@ function refreshTableInfo() {
     	        html += '&nbsp;';
     	    }
     	    html += '</td>';
+    	    
+    	    var sum = 0;
+            for(var i = 0; i < tableplane.signal.length; i++){
+                sum += parseInt(tableplane.signal[i]);
+            }
+            var avgSignal = Math.round(sum / tableplane.signal.length);
+            
+    	    html += '<td align="right">' + avgSignal + '</td>';
 			html += '<td align="right">' + tableplane.messages + '</td>';
 			html += '<td align="right">' + tableplane.seen + '</td>';
 			html += '</tr>';
