@@ -21,40 +21,49 @@ CenterLat = Number(localStorage['CenterLat']) || CONST_CENTERLAT;
 CenterLon = Number(localStorage['CenterLon']) || CONST_CENTERLON;
 ZoomLvl   = Number(localStorage['ZoomLvl']) || CONST_ZOOMLVL;
 
+// Set ajax data type. Datatype 'jsonp' is needed when using json from different port or server.
+// This way data type can be set from config.js or untracked[...].js files.
+if (typeof(ajaxDataType) === 'undefined') {
+    ajaxDataType = 'json';
+}
+
 function fetchData() {
-	$.getJSON(CONST_JSON, function(data) {
-		PlanesOnMap = 0
-		SpecialSquawk = false;
+    $.ajax({
+	    url: CONST_JSON,
+	    dataType: ajaxDataType,
+	    success: function(data) {
+		    PlanesOnMap = 0
+		    SpecialSquawk = false;
 		
-		// Loop through all the planes in the data packet
-		for (var j=0; j < data.length; j++) {
-			// Do we already have this plane object in Planes?
-			// If not make it.
-			if (Planes[data[j].hex]) {
-				var plane = Planes[data[j].hex];
-			} else {
-				var plane = jQuery.extend(true, {}, planeObject);
-			}
+		    // Loop through all the planes in the data packet
+		    for (var j=0; j < data.length; j++) {
+			    // Do we already have this plane object in Planes?
+			    // If not make it.
+			    if (Planes[data[j].hex]) {
+				    var plane = Planes[data[j].hex];
+			    } else {
+				    var plane = jQuery.extend(true, {}, planeObject);
+			    }
 			
-			/* For special squawk tests
-			if (data[j].hex == '4780a9x') {
-            	data[j].squawk = '7700';
-            } //*/
-            
-            // Set SpecialSquawk-value
-            if (data[j].squawk == '7500' || data[j].squawk == '7600' || data[j].squawk == '7700') {
-                SpecialSquawk = true;
-            }
+			    /* For special squawk tests *
+			    if (data[j].hex == 'xxxxxx') {
+                	data[j].squawk = '7101';
+                } //*/
+                
+                // Set SpecialSquawk-value
+                if (data[j].squawk == '7500' || data[j].squawk == '7600' || data[j].squawk == '7700') {
+                    SpecialSquawk = true;
+                }
 
-			// Call the function update
-			plane.funcUpdateData(data[j]);
+			    // Call the function update
+			    plane.funcUpdateData(data[j]);
 			
-			// Copy the plane into Planes
-			Planes[plane.icao] = plane;
-		}
-
-		PlanesOnTable = data.length;
-	});
+			    // Copy the plane into Planes
+			    Planes[plane.icao] = plane;
+		    }
+		    PlanesOnTable = data.length;
+	    }
+    });
 }
 
 // Initalizes the map and starts up our timers to call various functions
@@ -166,7 +175,7 @@ function initialize() {
     
     google.maps.event.addListener(GoogleMap, 'zoom_changed', function() {
         localStorage['ZoomLvl']  = GoogleMap.getZoom();
-    }); 
+    });
 	
 	// Add home marker if requested
 	if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
@@ -608,7 +617,9 @@ function sortTable(szTableID,iCol) {
 
 	//determine if we are delaing with numerical, or alphanumeric content
 	var bNumeric = false;
-	if ((typeof oTbl.rows[0] !== 'undefined') &&
+	if (iSortCol == 3) { // Special sorting for Altitude-column
+	    bNumeric = true;
+	} else if ((typeof oTbl.rows[0] !== 'undefined') &&
 	    (!isNaN(parseFloat(oTbl.rows[0].cells[iSortCol].textContent ||
 	    oTbl.rows[0].cells[iSortCol].innerText)))) {
 	    bNumeric = true;

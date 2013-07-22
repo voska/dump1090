@@ -173,6 +173,9 @@ var planeObject = {
 				}
 			} else {
 				if (this.reapable == true) {
+				    if (SelectedPlane == this.icao) {
+					    selectPlaneByHex(this.icao);
+					}
 					console.log(this.icao + ' has come back into range before the reaper!');
 				}
 				this.reapable = false;
