@@ -550,11 +550,14 @@ function refreshTableInfo() {
     	    }
     	    html += '</td>';
     	    
-    	    var sum = 0;
-            for(var i = 0; i < tableplane.signal.length; i++){
-                sum += parseInt(tableplane.signal[i]);
+    	    var avgSignal = 0;
+    	    if (tableplane.signal) {
+        	    var sum = 0;
+                for(var i = 0; i < tableplane.signal.length; i++){
+                    sum += parseInt(tableplane.signal[i]);
+                }
+                avgSignal = Math.round(sum / tableplane.signal.length);
             }
-            var avgSignal = Math.round(sum / tableplane.signal.length);
             
     	    html += '<td align="right">' + avgSignal + '</td>';
 			html += '<td align="right">' + tableplane.messages + '</td>';
