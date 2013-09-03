@@ -558,10 +558,11 @@ int decodeHexMessage(struct client *c, char *hex) {
 //
 // Return a description of planes in json. No metric conversion
 //
+/* Return a description of planes in json. No metric conversion. */
 char *aircraftsToJson(int *len) {
     time_t now = time(NULL);
     struct aircraft *a = Modes.aircrafts;
-    int buflen = 1024; // The initial buffer is incremented as needed
+    int buflen = 1024; /* The initial buffer is incremented as needed. */
     char *buf = (char *) malloc(buflen), *p = buf;
     int l;
 
@@ -570,12 +571,14 @@ char *aircraftsToJson(int *len) {
     while(a) {
         int position = 0;
         int track = 0;
+        int altitude = 0;
+        char signalLevel[34]; // "[255,255,255,255,255,255,255,255]"
 
         if (a->modeACflags & MODEAC_MSG_FLAG) { // skip any fudged ICAO records Mode A/C
             a = a->next;
             continue;
         }
-
+        
         if (a->bFlags & MODES_ACFLAGS_LATLON_VALID) {
             position = 1;
         }
@@ -584,16 +587,26 @@ char *aircraftsToJson(int *len) {
             track = 1;
         }
         
+        if (a->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) {
+            altitude = 1;
+        }
+        
+        // Latest signal level at [a->messages % 7]
+        sprintf(signalLevel, "[%d,%d,%d,%d,%d,%d,%d,%d]",
+            a->signalLevel[0], a->signalLevel[1], a->signalLevel[2], a->signalLevel[3],
+            a->signalLevel[4], a->signalLevel[5], a->signalLevel[6], a->signalLevel[7]);
+
         // No metric conversion
         l = snprintf(p,buflen,
             "{\"hex\":\"%06x\", \"squawk\":\"%04x\", \"flight\":\"%s\", \"lat\":%f, "
-            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"track\":%d, \"validtrack\":%d,"
-            "\"speed\":%d, \"messages\":%ld, \"seen\":%d},\n",
-            a->addr, a->modeA, a->flight, a->lat, a->lon, position, a->altitude, a->track, track,
-            a->speed, a->messages, (int)(now - a->seen));
+            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"validaltitude\":%d, "
+            "\"track\":%d, \"validtrack\":%d, \"signal\":%s, "
+            "\"speed\":%d, \"messages\":%ld, \"seen\":%d, \"lastupdate\":%d},\n",
+            a->addr, a->modeA, a->flight, a->lat, a->lon, position, a->altitude, altitude,
+            a->track, track, signalLevel, a->speed, a->messages, (int)(now - a->seen), (int)a->seen);
         p += l; buflen -= l;
         
-        //Resize if needed
+        /* Resize if needed. */
         if (buflen < 256) {
             int used = p-buf;
             buflen += 1024; // Our increment.
@@ -603,27 +616,25 @@ char *aircraftsToJson(int *len) {
         
         a = a->next;
     }
-
-    //Remove the final comma if any, and closes the json array.
+    /* Remove the final comma if any, and closes the json array. */
     if (*(p-2) == ',') {
         *(p-2) = '\n';
         p--;
         buflen++;
     }
-
     l = snprintf(p,buflen,"]\n");
     p += l; buflen -= l;
 
     *len = p-buf;
     return buf;
 }
-//
-//=========================================================================
-//
+
 #define MODES_CONTENT_TYPE_HTML "text/html;charset=utf-8"
-#define MODES_CONTENT_TYPE_CSS  "text/css;charset=utf-8"
+#define MODES_CONTENT_TYPE_CSS "text/css;charset=utf-8"
+#define MODES_CONTENT_TYPE_TXT "text/plain;charset=utf-8"
 #define MODES_CONTENT_TYPE_JSON "application/json;charset=utf-8"
-#define MODES_CONTENT_TYPE_JS   "application/javascript;charset=utf-8"
+#define MODES_CONTENT_TYPE_JS "application/javascript;charset=utf-8"
+#define MODES_CONTENT_TYPE_PNG "image/png"
 //
 // Get an HTTP request header and write the response to the client.
 // gain here we assume that the socket buffer is enough without doing
