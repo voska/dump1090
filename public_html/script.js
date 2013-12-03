@@ -792,7 +792,11 @@ function getMetar(pMetarICAO) {
     url = 'http://weather.aero/dataserver_current/httpparam?dataSource=metars&' +
             'requestType=retrieve&format=csv&hoursBeforeNow=1&fields=raw_text&' +
             'mostRecentForEachStation=postfilter&stationString=' + pMetarICAO;
-            
+     
+    //url = 'http://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&' +
+    //        'requestType=retrieve&format=csv&hoursBeforeNow=1&fields=raw_text&' +
+    //        'mostRecentForEachStation=postfilter&stationString=KCLT';
+       
     xReader(url, function(data) {
         if (data.status == Number(200)) {
             csv = data.content.split("\n");
@@ -807,7 +811,7 @@ function getMetar(pMetarICAO) {
             }
             document.getElementById('METAR').innerHTML = html;
             if (MetarReset) {
-                $("#METAR").position({ my: "left bottom", at: "left+5 bottom-5", of: "#map_canvas" });
+                $("#METAR").position({ my: "left bottom", at: "left+5 bottom-30", of: "#map_canvas" });
                 $("#METAR").draggable({ containment: "document" });
                 $("#METAR").addClass('ui-state-highlight');
                 $('#METAR').show();
