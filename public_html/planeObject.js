@@ -260,6 +260,8 @@ var planeObject = {
 		if (this.marker) {
 			this.marker.setPosition(new google.maps.LatLng(this.latitude, this.longitude));
 			this.marker.setIcon(this.funcGetIcon());
+            this.marker.set('labelContent', this.funcUpdateLabel());
+            this.marker.set('labelVisible', LabelShow)
 		} else {
 
 			this.marker = new MarkerWithLabel({
@@ -270,7 +272,8 @@ var planeObject = {
 				labelContent: this.funcUpdateLabel(),
 				labelAnchor: new google.maps.Point(-5, -10),
 				labelClass: "labels", // the CSS class for the label
-				labelStyle: {opacity: 0.75}
+				labelStyle: {opacity: 0.75},
+                labelVisible: LabelShow,
 			});
 
 			// This is so we can match icao address

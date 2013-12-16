@@ -43,3 +43,5 @@ AntennaDataCollect  = false;
 AntennaDataShow     = false;
 AntennaDataOpacity  = 0.3;
 
+// -- Label Showing ---------------------------------------
+LabelShow   = false;
