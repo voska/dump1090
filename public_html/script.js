@@ -109,7 +109,7 @@ function initialize() {
 			"stylers": [
 				{ "visibility": "on" },
 				{ "weight": 8 },
-				{ "color": "#000000" }
+				{ "color": "#0F0F0F" }
 			]
 		},{
 			"featureType": "water",
@@ -167,12 +167,12 @@ function initialize() {
 
 	GoogleMap.mapTypes.set("dark_map", styledMap);
 	
-	// Listeners for newly created Map
+    // Listeners for newly created Map
     google.maps.event.addListener(GoogleMap, 'center_changed', function() {
         localStorage['CenterLat'] = GoogleMap.getCenter().lat();
         localStorage['CenterLon'] = GoogleMap.getCenter().lng();
     });
-    
+
     google.maps.event.addListener(GoogleMap, 'zoom_changed', function() {
         localStorage['ZoomLvl']  = GoogleMap.getZoom();
     });
@@ -189,11 +189,11 @@ function initialize() {
         };
              
 	    var marker = new google.maps.Marker({
-          position: siteMarker,
-          map: GoogleMap,
-          icon: markerImage,
-          title: 'My Radar Site',
-          zIndex: -99999
+            position: siteMarker,
+            map: GoogleMap,
+            icon: markerImage,
+            title: 'My Radar Site',
+            zIndex: -99999
         });
         
         if (SiteCircles) {
@@ -237,14 +237,14 @@ function initialize() {
 	$("#resetMap").width(btnWidth);
 	$("#resetMap").css("margin-bottom", "3px");
 	$("#resetMap").button().focus(function() {
-      $(this).button("widget").removeClass("ui-state-focus");
-    });
+           $(this).button("widget").removeClass("ui-state-focus");
+        });
 	
 	$("#optionsModal").button({icons: {primary: "ui-icon-gear"}});
 	$("#optionsModal").width(btnWidth);
-    $("#optionsModal").button().focus(function() {
-      $(this).button("widget").removeClass("ui-state-focus");
-    });
+        $("#optionsModal").button().focus(function() {
+            $(this).button("widget").removeClass("ui-state-focus");
+        });
 	
 	// Load up our options page
 	optionsInitalize();
@@ -266,7 +266,8 @@ function initialize() {
 	    getMetar();
 	    $("#METAR").on("drag", function(event, ui) {
 	        MetarDragged = true;
-	    });
+	});
+
         window.setInterval(function() {
             getMetar();
         }, 300000);
