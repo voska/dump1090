@@ -25,7 +25,6 @@ var planeObject = {
 	flight		: null,
 	squawk		: null,
 	icao		: null,
-	reg         : null,
 	is_selected	: false,
 
 	// Data packet numbers
@@ -42,6 +41,16 @@ var planeObject = {
 	lines		: [],
 	trackdata	: new Array(),
 	trackline	: new Array(),
+
+	// Extra plane info, that has to be looked up
+	country		: null,
+    country_short: null,
+    country_flag: "NoFlag.bmp",
+    type		: "@@@",
+	owner		: null,
+    operator    : "@@@",
+	registration	: "NO-REG",
+	lookedup	: false,
 
 	// When was this last updated?
 	updated		: null,
@@ -138,7 +147,7 @@ var planeObject = {
 	},
 
 	funcGetFL : function() {
-		var zero = zeroPad(this.altitude, 6);
+		var zero = zeroPad(this.altitude, 5);
 		return zero
 	},
 
@@ -173,8 +182,12 @@ var planeObject = {
 		this.vTrack     = (parseInt(data.validtrack) ? true : false);
 		this.vPosition  = (parseInt(data.validposition) ? true : false);
 		this.vAltitude  = (parseInt(data.validaltitude) ? true : false);
-		if (data.reg && data.reg != '') {
-			this.reg    = data.reg;
+
+		if (BOOL_LOOKUP == true && this.lookedup == false) {
+			// Extra plane info, if we loaded the remote plane lookup.
+            if ( typeof regLookup == 'function' ) {
+                regLookup(this)
+            }
 		}
 
 		// If no packet in over 58 seconds, consider the plane reapable
@@ -260,8 +273,8 @@ var planeObject = {
 		if (this.marker) {
 			this.marker.setPosition(new google.maps.LatLng(this.latitude, this.longitude));
 			this.marker.setIcon(this.funcGetIcon());
-            this.marker.set('labelContent', this.funcUpdateLabel());
-            this.marker.set('labelVisible', LabelShow)
+			this.marker.set('labelContent', this.funcUpdateLabel());
+			this.marker.set('labelVisible', LabelShow)
 		} else {
 
 			this.marker = new MarkerWithLabel({
@@ -273,7 +286,7 @@ var planeObject = {
 				labelAnchor: new google.maps.Point(-5, -10),
 				labelClass: "labels", // the CSS class for the label
 				labelStyle: {opacity: 0.75},
-                labelVisible: LabelShow,
+				labelVisible: LabelShow,
 			});
 
 			// This is so we can match icao address

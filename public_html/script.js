@@ -27,12 +27,16 @@ if (typeof(ajaxDataType) === 'undefined') {
     ajaxDataType = 'json';
 }
 
+var iPlanesTrackable = 0;
+var iPlanesTable = 0;
+var iPlanesTotal = 0;
+
 function fetchData() {
     $.ajax({
 	    url: CONST_JSON,
 	    dataType: ajaxDataType,
 	    success: function(data) {
-		    PlanesOnMap = 0
+		    iPlanesTotal = 0
 		    SpecialSquawk = false;
 		
 		    // Loop through all the planes in the data packet
@@ -46,10 +50,11 @@ function fetchData() {
 			    }
 			
 			    /* For special squawk tests *
-			    if (data[j].hex == 'xxxxxx') {
-                	data[j].squawk = '7101';
-                } //*/
-                
+				if (data[j].hex == 'xxxxxx') {
+		                    	data[j].squawk = '7101';
+		                } //*/
+                iPlanesTotal = j;
+
                 // Set SpecialSquawk-value
                 if (data[j].squawk == '7500' || data[j].squawk == '7600' || data[j].squawk == '7700') {
                     SpecialSquawk = true;
@@ -61,7 +66,6 @@ function fetchData() {
 			    // Copy the plane into Planes
 			    Planes[plane.icao] = plane;
 		    }
-		    PlanesOnTable = data.length;
 	    }
     });
 }
@@ -216,7 +220,7 @@ function initialize() {
             length = Object.size(AntennaData);
             if (length < 270) {
                 jQuery.ajaxSetup({async:false});
-                $.get('/antennaBaseCoverage.txt',  function(data) {
+                $.get('antennaBaseCoverage.txt',  function(data) {
                     if (data.indexOf('Error') == -1) { // no errors
                         localStorage['AntennaData'] = data;
                     }
@@ -486,10 +490,18 @@ function refreshTableInfo() {
 	html += '<td onclick="setASC_DESC(\'7\');sortTable(\'tableinfo\',\'7\');" ' +
 	    'align="right">Msgs</td>';
 	html += '<td onclick="setASC_DESC(\'8\');sortTable(\'tableinfo\',\'8\');" ' +
-	    'align="right">Seen</td></thead><tbody>';
+	    'align="right">Seen</td>';
+	if ( typeof regLookup == 'function' ) {
+		html += '<td align="center" colspan="3">Imgs</td>';
+		html += '<td align="right">Reg</td>';
+	}
+    html += '</thead><tbody>';
+	iPlanesTable = 0;
+	iPlanesTrackable = 0;
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
 		if (!tableplane.reapable) {
+			iPlanesTable++;
 			var specialStyle = "";
 			// Is this the plane we selected?
 			if (tableplane.icao == SelectedPlane) {
@@ -510,6 +522,7 @@ function refreshTableInfo() {
 			
 			if (tableplane.vPosition == true) {
 				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row vPosition' + specialStyle + '">';
+				iPlanesTrackable++;
 			} else {
 				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row ' + specialStyle + '">';
 		    }
@@ -563,12 +576,19 @@ function refreshTableInfo() {
     	    html += '<td align="right">' + avgSignal + '</td>';
 			html += '<td align="right">' + tableplane.messages + '</td>';
 			html += '<td align="right">' + tableplane.seen + '</td>';
+            if ( typeof regLookup == 'function' ) {
+                html += '<td align="right"><img src="' + remote_imgdir + 'SQBflag/' + tableplane.country_flag + '" alt="' + tableplane.country + '" /></td>';
+                html += '<td align="right"><img src="' + remote_imgdir + 'OperatorLogos/' + tableplane.operator + '.png" alt="' + tableplane.operator + '" /></td>';
+                html += '<td align="right"><img src="' + remote_imgdir + 'SilhouettesLogos/' + tableplane.type + '.png"  alt="' + tableplane.type + '" /></td>';
+                html += '<td align="right">' + tableplane.registration + '</td>';
+            }
 			html += '</tr>';
 		}
 	}
 	html += '</tbody></table>';
 
 	document.getElementById('planes_table').innerHTML = html;
+	document.title = " (" + iPlanesTrackable + "/" + iPlanesTable + "/" + iPlanesTotal + ")";
 
 	if (SpecialSquawk) {
     	$('#SpecialSquawkWarning').css('display', 'inline');

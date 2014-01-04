@@ -45,3 +45,12 @@ AntennaDataOpacity  = 0.3;
 
 // -- Label Showing ---------------------------------------
 LabelShow   = false;
+
+
+// -- Lookup registration/country/type/owner---------------
+BOOL_LOOKUP = true;
+
+// -- Extended Data Info ----------------------------------
+// These only apply if you are using the remote
+// registration.js script
+remote_imgdir = 'http://adsb.mindlesstux.com/static/';
