@@ -11,6 +11,11 @@ var MetarReset    = true;
 var AntennaData     = {};
 var AntennaDataPath = null;
 
+// Track all the plane data in a massive array for the html table...
+var data_array = [];
+var data_table = null;
+
+// These might go away...
 var iSortCol=-1;
 var bSortASC=true;
 var bDefaultSortASC=true;
@@ -49,10 +54,10 @@ function fetchData() {
 				    var plane = jQuery.extend(true, {}, planeObject);
 			    }
 			
-			    /* For special squawk tests *
+			    /* For special squawk tests
 				if (data[j].hex == 'xxxxxx') {
-		                    	data[j].squawk = '7101';
-		                } //*/
+                    data[j].squawk = '7700';
+		        }*/
                 iPlanesTotal = j;
 
                 // Set SpecialSquawk-value
@@ -242,13 +247,13 @@ function initialize() {
 	$("#resetMap").css("margin-bottom", "3px");
 	$("#resetMap").button().focus(function() {
            $(this).button("widget").removeClass("ui-state-focus");
-        });
+    });
 	
 	$("#optionsModal").button({icons: {primary: "ui-icon-gear"}});
 	$("#optionsModal").width(btnWidth);
-        $("#optionsModal").button().focus(function() {
-            $(this).button("widget").removeClass("ui-state-focus");
-        });
+    $("#optionsModal").button().focus(function() {
+        $(this).button("widget").removeClass("ui-state-focus");
+    });
 	
 	// Load up our options page
 	optionsInitalize();
@@ -259,7 +264,7 @@ function initialize() {
 	// Setup our timer to poll from the server.
 	window.setInterval(function() {
 		fetchData();
-		refreshTableInfo();
+        updateTableOfPlanes();
 		refreshSelected();
 		reaper();
 		extendedPulse();
@@ -272,10 +277,52 @@ function initialize() {
 	        MetarDragged = true;
 	});
 
-        window.setInterval(function() {
+    window.setInterval(function() {
             getMetar();
         }, 300000);
     }
+
+    data_table = $('#table_of_planes').dataTable( {
+        "aaData": data_array,
+        "aoColumns": [
+            { "sTitle": "Flag",             "sWidth": "50px",   "sClass": "col-center",     "bSortable": false, "mData": "flag" },
+            { "sTitle": "Reg",              "sWidth": "50px",   "sClass": "col-left",                           "mData": "registration" },
+            { "sTitle": "Operator Logo",    "sWidth": "50px",   "sClass": "col-center",     "bSortable": false, "mData": "operator_logo" },
+            { "sTitle": "Silhouette",       "sWidth": "50px",   "sClass": "col-center",     "bSortable": false, "mData": "silhouette" },
+            { "sTitle": "Flight",           "sWidth": "50px",   "sClass": "col-left",                           "mData": "flight" },
+
+            { "sTitle": "Alt",              "sWidth": "50px",   "sClass": "col-right",                          "mData": "altitude"},
+            { "sTitle": "Spd",              "sWidth": "50px",   "sClass": "col-right",                          "mData": "speed" },
+            { "sTitle": "Trk",              "sWidth": "50px",   "sClass": "col-right",                          "mData": "track" },
+            { "sTitle": "Latitude",         "sWidth": "50px",   "sClass": "col-center",                         "mData": "latitude",        "bVisible": false, },
+            { "sTitle": "Longitude",        "sWidth": "50px",   "sClass": "col-center",                         "mData": "longitude",       "bVisible": false, },
+
+            { "sTitle": "Squawk",           "sWidth": "50px",   "sClass": "col-center",                         "mData": "squawk" },
+            { "sTitle": "ICAO",             "sWidth": "50px",   "sClass": "col-center",                         "mData": "icao" },
+            { "sTitle": "MSGs",             "sWidth": "50px",   "sClass": "col-right",                          "mData": "messages",        "bVisible": false,},
+            { "sTitle": "Seen",             "sWidth": "50px",   "sClass": "col-right",                          "mData": "seen",            "bVisible": false,},
+            { "sTitle": "Country",          "sWidth": "50px",   "sClass": "col-center",                         "mData": "country",         "bVisible": false,},
+            { "sTitle": "Country Short",    "sWidth": "50px",   "sClass": "col-center",                         "mData": "country_short",   "bVisible": false,},
+            { "sTitle": "Type",             "sWidth": "50px",   "sClass": "col-center",                         "mData": "type",            "bVisible": false,},
+            { "sTitle": "Operator",         "sWidth": "50px",   "sClass": "col-center",                         "mData": "operator",        "bVisible": false,},
+        ],
+        "asStripeClasses": [ "row" ],
+        "bPaginate": false,
+        "bLengthChange": false,
+        "bFilter": false,
+        "bSort": true,
+        "bInfo": false,
+        "bAutoWidth": false,
+        "bStateSave": true,
+        "bJQueryUI": true,
+        "sDom": 'Rt',
+    });
+
+    $("#table_of_planes").on('click', 'tr', function(event) {
+        var id = data_table.fnGetData(this);
+        onClickPlanes_table(id['icao'])
+        updateTableOfPlanes();
+    });
 }
 
 // This looks for planes to reap out of the master Planes variable
@@ -338,7 +385,7 @@ function refreshSelected() {
 	}
 	html += '<td></tr>';
 	
-	if (selected && selected.vAltitude) {
+	if (selected && selected.altitude != '') {
 	    if (Metric) {
         	html += '<tr><td>Altitude: ' + Math.round(selected.altitude / 3.2828) + ' m</td>';
         } else {
@@ -380,9 +427,9 @@ function refreshSelected() {
 	}
 
 	html += '</td><td>Reg: '
-	if (selected.reg && selected.reg != '') {
-	    html += '<a href="http://www.planespotters.net/Aviation_Photos/search.php?reg='+selected.reg +
-	        '&o=14" target="_blank">' + selected.reg + '</a>';
+	if (selected && selected.registration != '') {
+	    html += '<a href="http://www.planespotters.net/Aviation_Photos/search.php?reg='+selected.registration +
+	        '&o=14" target="_blank">' + selected.registration + '</a>';
 	} else {
 	    html += 'n/a';
 	}
@@ -427,7 +474,7 @@ function refreshSelected() {
 }
 
 // Right now we have no means to validate the speed is good
-// Want to return (n/a) when we dont have it
+// Want to return (n/a) when we don't have it
 // TODO: Edit C code to add a valid speed flag
 // TODO: Edit js code to use said flag
 function normalizeSpeed(speed, valid) {
@@ -470,139 +517,85 @@ function normalizeTrack(track, valid){
 	return x
 }
 
-// Refeshes the larger table of all the planes
-function refreshTableInfo() {
-	var html = '<table id="tableinfo" width="100%">';
-	html += '<thead style="background-color: #BBBBBB; cursor: pointer;">';
-	html += '<td onclick="setASC_DESC(\'0\');sortTable(\'tableinfo\',\'0\');">ICAO</td>';
-	html += '<td onclick="setASC_DESC(\'1\');sortTable(\'tableinfo\',\'1\');">Flight</td>';
-	html += '<td onclick="setASC_DESC(\'2\');sortTable(\'tableinfo\',\'2\');" ' +
-	    'align="right">Squawk</td>';
-	// There is special sorting code for altitude (3) at sortTable()-function
-	html += '<td onclick="setASC_DESC(\'3\');sortTable(\'tableinfo\',\'3\');" ' +
-	    'align="right">Altitude</td>';
-	html += '<td onclick="setASC_DESC(\'4\');sortTable(\'tableinfo\',\'4\');" ' +
-	    'align="right">Speed</td>';
-	html += '<td onclick="setASC_DESC(\'5\');sortTable(\'tableinfo\',\'5\');" ' +
-	    'align="right">Track</td>';
-	html += '<td onclick="setASC_DESC(\'6\');sortTable(\'tableinfo\',\'6\');" ' +
-	    'align="right">Signal</td>';
-	html += '<td onclick="setASC_DESC(\'7\');sortTable(\'tableinfo\',\'7\');" ' +
-	    'align="right">Msgs</td>';
-	html += '<td onclick="setASC_DESC(\'8\');sortTable(\'tableinfo\',\'8\');" ' +
-	    'align="right">Seen</td>';
-	if ( typeof regLookup == 'function' ) {
-		html += '<td align="center" colspan="3">Imgs</td>';
-		html += '<td align="right">Reg</td>';
-	}
-    html += '</thead><tbody>';
-	iPlanesTable = 0;
-	iPlanesTrackable = 0;
-	for (var tablep in Planes) {
-		var tableplane = Planes[tablep]
-		if (!tableplane.reapable) {
-			iPlanesTable++;
-			var specialStyle = "";
-			// Is this the plane we selected?
-			if (tableplane.icao == SelectedPlane) {
-				specialStyle += " selected";
-			}
-			// Lets hope we never see this... Aircraft Hijacking
-			if (tableplane.squawk == 7500) {
-				specialStyle += " squawk7500";
-			}
-			// Radio Failure
-			if (tableplane.squawk == 7600) {
-				specialStyle += " squawk7600";
-			}
-			// Emergency
-			if (tableplane.squawk == 7700) {
-				specialStyle += " squawk7700";
-			}
-			
-			if (tableplane.vPosition == true) {
-				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row vPosition' + specialStyle + '">';
-				iPlanesTrackable++;
-			} else {
-				html += "\n" + '<tr onClick="onClickPlanes_table(\'' + tableplane.icao + '\');" class="plane_table_row ' + specialStyle + '">';
-		    }
-		    
-		    if (tableplane.reg && tableplane.reg != '')  {
-		        html += '<td>' + tableplane.reg + '</td>';
-		    } else {
-			    html += '<td>' + tableplane.icao + '</td>';
-			}
-			html += '<td>' + tableplane.flight + '</td>';
-			if (tableplane.squawk != '0000' ) {
-    			html += '<td align="right">' + tableplane.squawk + '</td>';
-    	    } else {
-    	        html += '<td align="right">&nbsp;</td>';
-    	    }
-    	    
-    	    if (Metric) {
-    	        if (tableplane.vAltitude) {
-        			html += '<td align="right">' + Math.round(tableplane.altitude / 3.2828) + '</td>';
-        	    } else {
-    	            html += '<td align="right">&nbsp;</td>';
-    	        }
-    			html += '<td align="right">' + Math.round(tableplane.speed * 1.852) + '</td>';
-    	    } else {
-    	        if (tableplane.vAltitude) {
-    	            html += '<td align="right">' + tableplane.altitude + '</td>';
-    	        } else {
-    	            html += '<td align="right">&nbsp;</td>';
-    	        }
-    	        html += '<td align="right">' + tableplane.speed + '</td>';
-    	    }
-			
-			html += '<td align="right">';
-			if (tableplane.vTrack) {
-    			 html += normalizeTrack(tableplane.track, tableplane.vTrack)[2];
-    			 html += ' (' + normalizeTrack(tableplane.track, tableplane.vTrack)[1] + ')';
-    	    } else {
-    	        html += '&nbsp;';
-    	    }
-    	    html += '</td>';
-    	    
-    	    var avgSignal = 0;
-    	    if (tableplane.signal) {
-        	    var sum = 0;
-                for(var i = 0; i < tableplane.signal.length; i++){
-                    sum += parseInt(tableplane.signal[i]);
-                }
-                avgSignal = Math.round(sum / tableplane.signal.length);
-            }
-            
-    	    html += '<td align="right">' + avgSignal + '</td>';
-			html += '<td align="right">' + tableplane.messages + '</td>';
-			html += '<td align="right">' + tableplane.seen + '</td>';
-            if ( typeof regLookup == 'function' ) {
-                html += '<td align="right"><img src="' + remote_imgdir + 'SQBflag/' + tableplane.country_flag + '" alt="' + tableplane.country + '" /></td>';
-                html += '<td align="right"><img src="' + remote_imgdir + 'OperatorLogos/' + tableplane.operator + '.png" alt="' + tableplane.operator + '" /></td>';
-                html += '<td align="right"><img src="' + remote_imgdir + 'SilhouettesLogos/' + tableplane.type + '.png"  alt="' + tableplane.type + '" /></td>';
-                html += '<td align="right">' + tableplane.registration + '</td>';
-            }
-			html += '</tr>';
-		}
-	}
-	html += '</tbody></table>';
+function updateTableOfPlanes() {
+    // Blank array
+    data_tmp = [];
 
-	document.getElementById('planes_table').innerHTML = html;
-	document.title = " (" + iPlanesTrackable + "/" + iPlanesTable + "/" + iPlanesTotal + ")";
+    // Planes on the table
+    iPlanesTable = 0;
+    // Planes that can be tracked to a lat/long
+    iPlanesTrackable = 0;
 
-	if (SpecialSquawk) {
+    // Loop through all the planes
+    for (var tablep in Planes) {
+        // Pluck our plane
+        var tableplane = Planes[tablep];
+
+        // If the plane is not beyond 60 seconds, basically
+        if (!tableplane.reapable) {
+            // Count it on the table
+            iPlanesTable++;
+
+            // Data array for this plane to be passed to the table
+            var tmp = {
+                "altitude": tableplane.altitude,
+                "speed": tableplane.speed,
+                "track": tableplane.track,
+                "latitude": tableplane.latitude,
+                "longitude": tableplane.longitude,
+                "flight": tableplane.flight,
+                "icao": tableplane.icao,
+                "messages": tableplane.messages,
+                "seen": tableplane.seen,
+                "country": tableplane.country,
+                "country_short": tableplane.country_short,
+                "type": tableplane.type,
+                "operator": tableplane.operator,
+                "registration": tableplane.registration,
+                "squawk": tableplane.squawk,
+
+                "flag": '<img src="' + remote_imgdir + 'Small_Flags/' + tableplane.country_flag + '" title="' + tableplane.country + '"  alt="' + tableplane.country + '" />',
+                "operator_logo": '<img src="' + remote_imgdir + 'OperatorLogos/' + tableplane.operator + '.png" title="' + tableplane.operator + '"  alt="' + tableplane.operator + '" height="20" width="85" />',
+                "silhouette": '<img src="' + remote_imgdir + 'SilhouettesLogos/' + tableplane.type + '.png" title="' + tableplane.type + '"  alt="' + tableplane.type + '" height="20" width="85" />',
+
+                "DT_RowId":	tableplane.icao,
+                "DT_RowClass":	tableplane.specialStyle,
+            };
+
+            // If all 0's then it is not something we want to show
+            if (tableplane.squawk == '0000') {
+                tmp["squawk"] = "";
+            }
+
+            // Push the data array to the tmp data table
+            data_tmp.push(tmp);
+        }
+
+    };
+
+    // Rebuild the table
+    data_array = data_tmp;
+    data_table.fnClearTable();
+    data_table.fnAddData(data_array);
+
+    // Update the document title to be something like "Dump1090 (1/2/3)"
+    // 1 = Planes able to be tracked via Lat/Long
+    // 2 = Planes that are shown on the table
+    // 3 = All planes, including the ones preping to be reaped
+    document.title = "Dump1090 (" + iPlanesTrackable + "/" + iPlanesTable + "/" + iPlanesTotal + ")";
+
+    // If there is a squawk that is to be noted...
+    if (SpecialSquawk) {
     	$('#SpecialSquawkWarning').css('display', 'inline');
     } else {
         $('#SpecialSquawkWarning').css('display', 'none');
     }
-
-	sortTable("tableinfo");
 }
 
 function onClickPlanes_table (hex) {
     if (hex && hex != '' && hex != "ICAO") {
 		selectPlaneByHex(hex);
-		refreshTableInfo();
+        updateTableOfPlanes();
 		refreshSelected();
 	}
 }
@@ -702,7 +695,7 @@ function selectPlaneByHex(hex) {
 		SelectedPlane = null;
 	}
     refreshSelected();
-    refreshTableInfo();
+    updateTableOfPlanes()
 }
 
 function resetMap() {
@@ -728,7 +721,7 @@ function resetMap() {
 	MetarReset = true;
 
 	refreshSelected();
-	refreshTableInfo();
+    updateTableOfPlanes();
 	getMetar();
 }
 

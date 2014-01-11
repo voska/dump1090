@@ -54,3 +54,6 @@ BOOL_LOOKUP = true;
 // These only apply if you are using the remote
 // registration.js script
 remote_imgdir = 'http://adsb.mindlesstux.com/static/';
+
+// -- Put debuging lines into console ---------------------
+BOOL_DEBUG = false;

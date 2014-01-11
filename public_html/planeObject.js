@@ -13,6 +13,7 @@ var planeObject = {
 	oldlat		: null,
 	oldlon		: null,
 	oldalt		: null,
+    oldfltlvl   : null,
 
 	// Basic location information
 	altitude	: null,
@@ -43,34 +44,39 @@ var planeObject = {
 	trackline	: new Array(),
 
 	// Extra plane info, that has to be looked up
-	country		: null,
-    country_short: null,
-    country_flag: "NoFlag.bmp",
+    country		: null,
+    country_short	: null,
+    country_flag	: "NoFlag.png",
     type		: "@@@",
-	owner		: null,
+    owner		: null,
     operator    : "@@@",
-	registration	: "NO-REG",
-	lookedup	: false,
+    registration	: "NO-REG",
+    lookedup	: false,
 
-	// When was this last updated?
-	updated		: null,
-	reapable	: false,
+    // Extra plane info, that has to be computed
+    specialStyle: "",
+
+    // When was this last updated?
+    updated		: null,
+    reapable	: false,
 
 	// Appends data to the running track so we can get a visual tail on the plane
 	// Only useful for a long running browser session.
 	funcAddToTrack	: function(){
 		// TODO: Write this function out
-		this.trackdata.push([this.latitude, this.longitude, this.altitude, this.track, this.speed]);
+		this.trackdata.push([Number(new Date()), this.latitude, this.longitude, this.altitude, this.track, this.speed]);
 		this.trackline.push(new google.maps.LatLng(this.latitude, this.longitude));
 	},
 
 	// This is to remove the line from the screen if we deselect the plane
 	funcClearLine	: function() {
-	console.log("Clearing line for: " + this.icao);
-	if (this.line) {
-		this.line.setMap(null);
-		this.line = null;
-	}
+        if (BOOL_DEBUG) {
+            console.log("Clearing line for: " + this.icao);
+        }
+        if (this.line) {
+            this.line.setMap(null);
+            this.line = null;
+        }
 	},
 
 	// Should create an icon for us to use on the map...
@@ -158,13 +164,13 @@ var planeObject = {
 		return label
 	},
 
-
 	// Update our data
 	funcUpdateData	: function(data){
 		// So we can find out if we moved
 		var oldlat 	= this.latitude;
 		var oldlon	= this.longitude;
 		var oldalt	= this.altitude;
+        var oldfltlvl = this.funcGetFL().slice(0, 3);
 
 		// Update all of our data
 		this.updated	= new Date().getTime();
@@ -183,6 +189,8 @@ var planeObject = {
 		this.vPosition  = (parseInt(data.validposition) ? true : false);
 		this.vAltitude  = (parseInt(data.validaltitude) ? true : false);
 
+        // If we have lookup set to true, and the function is registered
+        // Attempt to get more information about the aircraft
 		if (BOOL_LOOKUP == true && this.lookedup == false) {
 			// Extra plane info, if we loaded the remote plane lookup.
             if ( typeof regLookup == 'function' ) {
@@ -213,7 +221,9 @@ var planeObject = {
 				if (SelectedPlane == this.icao) {
 					selectPlaneByHex(this.icao);
 				}
-				console.log(this.icao + ' has come back into range before the reaper!');
+                if (BOOL_DEBUG) {
+                    console.log(this.icao + ' has come back into range before the reaper!');
+                }
 			}
 			this.reapable = false;
 		}
@@ -266,6 +276,32 @@ var planeObject = {
 			this.marker = this.funcUpdateMarker();
 			PlanesOnMap++;
 		}
+
+        // Set any special row style information
+        this.specialStyle = "";
+
+        // Is this the plane we selected?
+        if (this.icao == SelectedPlane) {
+            this.specialStyle += " selected";
+        }
+        // Lets hope we never see this... Aircraft Hijacking
+        if (this.squawk == 7500) {
+            this.specialStyle += " squawk7500";
+        }
+        // Radio Failure
+        if (this.squawk == 7600) {
+            this.specialStyle += " squawk7600";
+        }
+        // Emergency
+        if (this.squawk == 7700) {
+            this.specialStyle += " squawk7700";
+        }
+
+        // If the plane has a vaild lat/long, count it among the trackable.
+        if (this.vPosition == true) {
+            this.specialStyle += " vPosition";
+            iPlanesTrackable++;
+        }
 	},
 
 	// Update our marker on the map
@@ -274,9 +310,16 @@ var planeObject = {
 			this.marker.setPosition(new google.maps.LatLng(this.latitude, this.longitude));
 			this.marker.setIcon(this.funcGetIcon());
 			this.marker.set('labelContent', this.funcUpdateLabel());
+            this.marker.set('labelClass', "labels");
 			this.marker.set('labelVisible', LabelShow)
-		} else {
+            try {
+                this.marker.label.setStyles();
+                this.marker.label.draw();
+            } catch (e) {
+                console.log(e);
+            }
 
+		} else {
 			this.marker = new MarkerWithLabel({
 				position: new google.maps.LatLng(this.latitude, this.longitude),
 				map: GoogleMap,
@@ -313,7 +356,9 @@ var planeObject = {
 			var path = this.line.getPath();
 			path.push(new google.maps.LatLng(this.latitude, this.longitude));
 		} else {
-			console.log("Starting new line");
+            if (BOOL_DEBUG) {
+                console.log("Starting new line");
+            }
 			this.line = new google.maps.Polyline({
 				strokeColor: '#000000',
 				strokeOpacity: 1.0,
