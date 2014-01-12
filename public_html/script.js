@@ -46,6 +46,7 @@ function fetchData() {
 		
 		    // Loop through all the planes in the data packet
 		    for (var j=0; j < data.length; j++) {
+                iPlanesTotal++;
 			    // Do we already have this plane object in Planes?
 			    // If not make it.
 			    if (Planes[data[j].hex]) {
@@ -58,7 +59,7 @@ function fetchData() {
 				if (data[j].hex == 'xxxxxx') {
                     data[j].squawk = '7700';
 		        }*/
-                iPlanesTotal = j;
+
 
                 // Set SpecialSquawk-value
                 if (data[j].squawk == '7500' || data[j].squawk == '7600' || data[j].squawk == '7700') {
@@ -67,10 +68,15 @@ function fetchData() {
 
 			    // Call the function update
 			    plane.funcUpdateData(data[j]);
-			
+
 			    // Copy the plane into Planes
 			    Planes[plane.icao] = plane;
 		    }
+
+            updateTableOfPlanes();
+            refreshSelected();
+            reaper();
+            extendedPulse();
 	    }
     });
 }
@@ -164,6 +170,40 @@ function initialize() {
 
 	GoogleMap = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
+    var jQueryLayout = $('body').layout({
+        stateManagement__enabled:	true,
+        minSize:					100,
+        defaults: {
+        },
+        onresize: function () {
+            google.maps.event.trigger(GoogleMap, 'resize');
+            GoogleMap.setCenter(new google.maps.LatLng(CenterLat, CenterLon));
+        },
+        east: {
+            size:					350,
+            spacing_closed:			22,
+            togglerLength_open: 	160,
+            togglerLength_closed:	160,
+            togglerAlign_closed:	"top",
+            togglerContent_closed:	"D<br/>a<br/>t<br/>a<br/> <br/>T<br/>a<br/>b<br/>l<br/>e",
+            togglerTip_closed:		"Data table",
+            fxName:                 "none",
+        },
+        east__childOptions:	{
+            minSize:				50,	// ALL panes
+            north__size:			250,
+            north: {
+                spacing_closed:         15,
+                togglerLength_open: 	160,
+                togglerLength_closed:	160,
+                togglerAlign_closed:	"right",
+                togglerContent_closed:	"Selected Data",
+                togglerTip_closed:		"Selected Data",
+                fxName:                 "none",
+            }
+        },
+    });
+
 	//Define OSM map type pointing at the OpenStreetMap tile server
 	GoogleMap.mapTypes.set("OSM", new google.maps.ImageMapType({
 		getTileUrl: function(coord, zoom) {
@@ -254,7 +294,7 @@ function initialize() {
     $("#optionsModal").button().focus(function() {
         $(this).button("widget").removeClass("ui-state-focus");
     });
-	
+
 	// Load up our options page
 	optionsInitalize();
 
@@ -264,10 +304,6 @@ function initialize() {
 	// Setup our timer to poll from the server.
 	window.setInterval(function() {
 		fetchData();
-        updateTableOfPlanes();
-		refreshSelected();
-		reaper();
-		extendedPulse();
 	}, 1000);
 	
 	// Refresh metar now and then only once every 5 minutes.
@@ -321,7 +357,6 @@ function initialize() {
     $("#table_of_planes").on('click', 'tr', function(event) {
         var id = data_table.fnGetData(this);
         onClickPlanes_table(id['icao'])
-        updateTableOfPlanes();
     });
 }
 
@@ -473,14 +508,6 @@ function refreshSelected() {
 	document.getElementById('plane_detail').innerHTML = html;
 }
 
-// Right now we have no means to validate the speed is good
-// Want to return (n/a) when we don't have it
-// TODO: Edit C code to add a valid speed flag
-// TODO: Edit js code to use said flag
-function normalizeSpeed(speed, valid) {
-	return speed	
-}
-
 // Returns back a long string, short string, and the track if we have a vaild track path
 function normalizeTrack(track, valid){
 	x = []
@@ -523,6 +550,7 @@ function updateTableOfPlanes() {
 
     // Planes on the table
     iPlanesTable = 0;
+
     // Planes that can be tracked to a lat/long
     iPlanesTrackable = 0;
 
@@ -562,6 +590,11 @@ function updateTableOfPlanes() {
                 "DT_RowClass":	tableplane.specialStyle,
             };
 
+            // Have to put this here to track it
+            if (tableplane.vPosition == true) {
+                iPlanesTrackable++;
+            }
+
             // If all 0's then it is not something we want to show
             if (tableplane.squawk == '0000') {
                 tmp["squawk"] = "";
@@ -595,78 +628,7 @@ function updateTableOfPlanes() {
 function onClickPlanes_table (hex) {
     if (hex && hex != '' && hex != "ICAO") {
 		selectPlaneByHex(hex);
-        updateTableOfPlanes();
-		refreshSelected();
 	}
-}
-
-// Credit goes to a co-worker that needed a similar functions for something else
-// we get a copy of it free ;)
-function setASC_DESC(iCol) {
-	if(iSortCol==iCol) {
-		bSortASC=!bSortASC;
-	} else {
-		bSortASC=bDefaultSortASC;
-	}
-}
-
-function sortTable(szTableID,iCol) { 
-	//if iCol was not provided, and iSortCol is not set, assign default value
-	if (typeof iCol==='undefined'){
-		if(iSortCol!=-1){
-			var iCol=iSortCol;
-		} else {
-			var iCol=iDefaultSortCol;
-		}
-	}
-
-	//retrieve passed table element
-	var oTbl=document.getElementById(szTableID).tBodies[0];
-	var aStore=[];
-
-	//If supplied col # is greater than the actual number of cols, set sel col = to last col
-	if (typeof oTbl.rows[0] !== 'undefined' && oTbl.rows[0].cells.length <= iCol) {
-		iCol=(oTbl.rows[0].cells.length-1);
-    }
-
-	//store the col #
-	iSortCol=iCol;
-
-	//determine if we are delaing with numerical, or alphanumeric content
-	var bNumeric = false;
-	if (iSortCol == 3) { // Special sorting for Altitude-column
-	    bNumeric = true;
-	} else if ((typeof oTbl.rows[0] !== 'undefined') &&
-	    (!isNaN(parseFloat(oTbl.rows[0].cells[iSortCol].textContent ||
-	    oTbl.rows[0].cells[iSortCol].innerText)))) {
-	    bNumeric = true;
-	}
-
-	//loop through the rows, storing each one inro aStore
-	for (var i=0,iLen=oTbl.rows.length;i<iLen;i++){
-		var oRow=oTbl.rows[i];
-		vColData=bNumeric?parseFloat(oRow.cells[iSortCol].textContent||oRow.cells[iSortCol].innerText):String(oRow.cells[iSortCol].textContent||oRow.cells[iSortCol].innerText);
-		
-		// Sort empty altitude as 0
-		if (iSortCol == 3 && (!vColData || vColData.length < 2)) {vColData = 0;}
-		aStore.push([vColData,oRow]);
-	}
-
-	//sort aStore ASC/DESC based on value of bSortASC
-	if (bNumeric) { //numerical sort
-		aStore.sort(function(x,y){return bSortASC?x[0]-y[0]:y[0]-x[0];});
-	} else { //alpha sort
-		aStore.sort();
-		if(!bSortASC) {
-			aStore.reverse();
-	    }
-	}
-
-	//rewrite the table rows to the passed table element
-	for(var i=0,iLen=aStore.length;i<iLen;i++){
-		oTbl.appendChild(aStore[i][1]);
-	}
-	aStore=null;
 }
 
 function selectPlaneByHex(hex) {
@@ -679,6 +641,7 @@ function selectPlaneByHex(hex) {
 		if (Planes[SelectedPlane].marker) {
 			Planes[SelectedPlane].marker.setIcon(Planes[SelectedPlane].funcGetIcon());
 		}
+        Planes[SelectedPlane].funcUpdateStyle();
 	}
 
 	// If we are clicking the same plane, we are deselected it.
@@ -691,11 +654,10 @@ function selectPlaneByHex(hex) {
 			Planes[SelectedPlane].funcUpdateLines();
 			Planes[SelectedPlane].marker.setIcon(Planes[SelectedPlane].funcGetIcon());
 		}
+        Planes[SelectedPlane].funcUpdateStyle();
 	} else { 
 		SelectedPlane = null;
 	}
-    refreshSelected();
-    updateTableOfPlanes()
 }
 
 function resetMap() {

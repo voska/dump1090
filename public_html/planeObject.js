@@ -164,6 +164,33 @@ var planeObject = {
 		return label
 	},
 
+    funcUpdateStyle : function() {
+        // Set any special row style information
+        this.specialStyle = "";
+
+        // Is this the plane we selected?
+        if (this.icao == SelectedPlane) {
+            this.specialStyle += " selected";
+        }
+        // Lets hope we never see this... Aircraft Hijacking
+        if (this.squawk == 7500) {
+            this.specialStyle += " squawk7500";
+        }
+        // Radio Failure
+        if (this.squawk == 7600) {
+            this.specialStyle += " squawk7600";
+        }
+        // Emergency
+        if (this.squawk == 7700) {
+            this.specialStyle += " squawk7700";
+        }
+
+        // If the plane has a vaild lat/long, count it among the trackable.
+        if (this.vPosition == true) {
+            this.specialStyle += " vPosition";
+        }
+    },
+
 	// Update our data
 	funcUpdateData	: function(data){
 		// So we can find out if we moved
@@ -277,31 +304,7 @@ var planeObject = {
 			PlanesOnMap++;
 		}
 
-        // Set any special row style information
-        this.specialStyle = "";
-
-        // Is this the plane we selected?
-        if (this.icao == SelectedPlane) {
-            this.specialStyle += " selected";
-        }
-        // Lets hope we never see this... Aircraft Hijacking
-        if (this.squawk == 7500) {
-            this.specialStyle += " squawk7500";
-        }
-        // Radio Failure
-        if (this.squawk == 7600) {
-            this.specialStyle += " squawk7600";
-        }
-        // Emergency
-        if (this.squawk == 7700) {
-            this.specialStyle += " squawk7700";
-        }
-
-        // If the plane has a vaild lat/long, count it among the trackable.
-        if (this.vPosition == true) {
-            this.specialStyle += " vPosition";
-            iPlanesTrackable++;
-        }
+        this.funcUpdateStyle();
 	},
 
 	// Update our marker on the map
