@@ -302,6 +302,9 @@ function refreshSelected() {
     } else {
         html += '<td>ICAO (hex): n/a</td></tr>'; // Something is wrong if we are here
     }
+  if (selected && (selected.icao == "adfdf8" || selected.icao == "adfdf9")) { // Air Force One
+    html += '&nbsp;<span class="squawk7500">&nbsp;ICAO hex indicates you are tracking Air Force One.&nbsp;</span>';
+  }
 
     html += '<tr><td>Track: '
   if (selected && selected.vTrack) {
